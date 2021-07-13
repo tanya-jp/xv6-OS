@@ -107,3 +107,9 @@ sys_clone(void)
   
   return clone((void *)add_stack);
 }
+
+int
+sys_join(void)
+{
+  return 1;
+}

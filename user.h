@@ -25,6 +25,9 @@ int sleep(int);
 int uptime(void);
 void printhelloworld(void);
 int clone(void*);
+int join(void);
+int lock(int*);
+int unlocl(int*);
 
 // ulib.c
 int stat(const char*, struct stat*);

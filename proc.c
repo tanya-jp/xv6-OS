@@ -533,12 +533,15 @@ procdump(void)
   }
 }
 
-void printhelloworld(void){
+//print hello world!
+void 
+printhelloworld(void){
   cprintf("Hello World!!\n");
 }
 
 //clone
-int clone(void *stack){
+int 
+clone(void *stack){
   
   int i, pid;
   struct proc *np;
@@ -594,4 +597,25 @@ int clone(void *stack){
   // if(argint(1, &size) < 0)
   //   retrun -1;
 
+}
+
+//join
+int 
+join(void)
+{
+  return 1;
+}
+
+//lock
+int 
+lock(int *l)
+{
+  return 1;
+}
+
+//unlock
+int 
+unlock(int *l)
+{
+  return 1;
 }
