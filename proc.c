@@ -540,14 +540,14 @@ void printhelloworld(void){
 //clone
 int clone(void *stack){
   
-  // int i, pid;
-  // struct proc *np;
-  // struct proc *curproc = myproc();
+  int i, pid;
+  struct proc *np;
+  struct proc *curproc = myproc();
 
-  // // Allocate process.
-  // if((np = allocproc()) == 0){
-  //   return -1;
-  // }
+  // Allocate process.
+  if((np = allocproc()) == 0){
+    return -1;
+  }
 
   // // Copy process state from proc.
   // // if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
@@ -556,30 +556,42 @@ int clone(void *stack){
   // //   np->state = UNUSED;
   // //   return -1;
   // // }
-  // *np->pgdir = *curproc->pgdir;
-  // np->sz = curproc->sz;
-  // np->parent = curproc;
-  // *np->tf = *curproc->tf;
+  np->pgdir = curproc->pgdir;
+  np->sz = curproc->sz;
+  np->parent = curproc;
+  *np->tf = *curproc->tf;
   // np->stack = stack;
+  int clone_size = *(int*)curproc->tf->ebp - curproc->tf->esp;
+  cprintf("clone_size = %d\n", clone_size);
+  int delta_ebp = *(int*)curproc->tf->ebp - curproc->tf->ebp;
 
-  // // Clear %eax so that fork returns 0 in the child.
-  // np->tf->eax = 0;
+  np->tf->esp = (int)stack + PGSIZE - clone_size;
+  np->tf->ebp = (int)stack + PGSIZE - delta_ebp;
 
-  // for(i = 0; i < NOFILE; i++)
-  //   if(curproc->ofile[i])
-  //     np->ofile[i] = filedup(curproc->ofile[i]);
-  // np->cwd = idup(curproc->cwd);
+  memmove((void*)np->tf->esp,(const void*)curproc->tf->esp, clone_size);
 
-  // safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
-  // pid = np->pid;
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
 
-  // acquire(&ptable.lock);
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = curproc->ofile[i];
+  np->cwd = idup(curproc->cwd);
 
-  // np->state = RUNNABLE;
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
-  // release(&ptable.lock);
+  pid = np->pid;
 
-  // return pid;
-  return 1;
+  acquire(&ptable.lock);
+
+  np->state = RUNNABLE;
+
+  release(&ptable.lock);
+
+  return pid;
+  // int size;
+  // if(argint(1, &size) < 0)
+  //   retrun -1;
+
 }

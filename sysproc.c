@@ -100,6 +100,10 @@ sys_printhelloworld(void)
 int
 sys_clone(void)
 {
-  int add_stack = 2;
+  int add_stack;
+  
+  if(argint(0, &add_stack) < 0)
+    return -1;
+  
   return clone((void *)add_stack);
 }
