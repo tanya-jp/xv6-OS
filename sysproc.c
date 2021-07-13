@@ -96,3 +96,10 @@ sys_printhelloworld(void)
   printhelloworld();
   return 0;
 }
+
+int
+sys_clone(void)
+{
+  int add_stack = 2;
+  return clone((void *)add_stack);
+}
