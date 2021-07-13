@@ -111,5 +111,19 @@ sys_clone(void)
 int
 sys_join(void)
 {
-  return 1;
+  return join();
+}
+
+int
+sys_lock(void)
+{
+  int* x;
+  return lock(&x);
+}
+
+int
+sys_unlock(void)
+{
+  int* x;
+  return unlock(&x);
 }

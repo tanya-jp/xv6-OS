@@ -124,7 +124,7 @@ void            printhelloworld(void);
 int             clone(void*);
 int             join(void);
 int             lock(int*);
-int             unlocl(int*);
+int             unlock(int*);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
