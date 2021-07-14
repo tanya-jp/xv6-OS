@@ -599,11 +599,48 @@ clone(void *stack){
 
 }
 
-//join
+//Wait for a thread to exit and return its pid
+//Return -1 on error
 int 
 join(void)
 {
-  return 1;
+  struct proc *p;
+  int pid;
+  struct proc *curproc = myproc();
+  
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for zombie children.
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent != curproc)
+        continue;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        curproc->threads--;
+        if(curproc <= 0)
+          freevm(p->pgdir);
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any threads.
+    if(curproc->threads <= 0 || curproc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for threads to exit.  (See wakeup1 call in proc_exit.)
+    sleep(curproc, &ptable.lock);  //DOC: wait-sleep
+  }
 }
 
 //lock
