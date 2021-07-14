@@ -117,8 +117,11 @@ sys_join(void)
 int
 sys_lock(void)
 {
-  int* x;
-  return lock(&x);
+  char* l;
+  if(argptr(0, &l, sizeof(char*)) < 0)
+    return -1;
+  
+  return lock((int*) l);
 }
 
 int

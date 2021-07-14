@@ -14,6 +14,8 @@ struct {
 
 static struct proc *initproc;
 
+static struct spinlock slock;
+
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
@@ -23,6 +25,7 @@ static void wakeup1(void *chan);
 void
 pinit(void)
 {
+  initlock(&slock, "guard");
   initlock(&ptable.lock, "ptable");
 }
 
@@ -647,7 +650,19 @@ join(void)
 int 
 lock(int *l)
 {
-  return 1;
+  acquire(&slock)
+  if(*l == 0){
+    *l = 1;
+     release(&slock);
+     return 0;
+  }
+
+  while (*l == 1)
+    sleep(1, &slock);
+  *l = 1;
+  release(&slock);
+
+  return 0;
 }
 
 //unlock
