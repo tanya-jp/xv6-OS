@@ -127,6 +127,9 @@ sys_lock(void)
 int
 sys_unlock(void)
 {
-  int* x;
-  return unlock(&x);
+  char* l;
+  if(argptr(0, &l, sizeof(char*)) < 0)
+    return -1;
+  
+  return unlock((int*) l);
 }

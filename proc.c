@@ -669,5 +669,15 @@ lock(int *l)
 int 
 unlock(int *l)
 {
-  return 1;
+  acquire(&slock)
+  if(*l == 0){
+     release(&slock);
+     return -1;
+  }
+
+  *l = 0;
+  wakeup(1);
+  release(&slock);
+
+  return 0;
 }
