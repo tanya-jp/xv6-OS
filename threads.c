@@ -1,24 +1,32 @@
 #include "types.h"
-#include "stats.h"
-#include "fcntl.h"
+#include "stat.h"
 #include "user.h"
-#include "x86.h"
-#include "mmu.h"
 
-int thread_create(void*(*start_routine)void*, void*(arg)){
-    char* stack = malloc(PGSIZE);
-    if(stack == 0)
-        return -1;
-    int id = clone(stack);
-    if(id < 0){
-        printf("error calling clone\n");
-        return -1;
-    }
-    if(id == 0){
-        (start_routine)(arg);
-        free(stack);
-        exit();
-    }
+#define PGSIZE 4096
 
-    return id;
+int
+thread_create(void (*fn) (void *), void *arg)
+{
+  void* stack = malloc(PGSIZE * 2);
+  
+  if((uint)stack % PGSIZE)
+    stack = stack + (4096 - (uint)stack % PGSIZE);
+
+  int threadId = clone(stack);
+
+  if (threadId == -1)
+    return -1;
+
+  if (threadId == 0) //Child Code
+  {
+    fn(arg);
+	free(stack);
+    exit();
+  }
+  else //Parent Code
+  {
+    return threadId;
+  }
+
+  return -1;
 }

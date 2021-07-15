@@ -545,7 +545,6 @@ printhelloworld(void){
 //clone
 int 
 clone(void *stack){
-  
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
@@ -555,34 +554,42 @@ clone(void *stack){
     return -1;
   }
 
-  // // Copy process state from proc.
-  // // if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
-  // //   kfree(np->kstack);
-  // //   np->kstack = 0;
-  // //   np->state = UNUSED;
-  // //   return -1;
-  // // }
+  // Copy process state from proc.
+  // if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  //   kfree(np->kstack);
+  //   np->kstack = 0;
+  //   np->state = UNUSED;
+  //   return -1;
+  // }
   np->pgdir = curproc->pgdir;
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
-  // np->stack = stack;
-  int clone_size = *(int*)curproc->tf->ebp - curproc->tf->esp;
-  cprintf("clone_size = %d\n", clone_size);
-  int delta_ebp = *(int*)curproc->tf->ebp - curproc->tf->ebp;
 
-  np->tf->esp = (int)stack + PGSIZE - clone_size;
-  np->tf->ebp = (int)stack + PGSIZE - delta_ebp;
+  np->parent->threads++;
 
-  memmove((void*)np->tf->esp,(const void*)curproc->tf->esp, clone_size);
+  uint nbp, nsp, spb;
+//Calculate bp and stack pointer for calculating bp and sp
+	nbp = curproc->tf->ebp & 0x0FFF;
+	nbp = nbp | (uint)stack;
+	
+	nsp = curproc->tf->esp & 0x0FFF;
+	nsp = nsp | (uint)stack;
 
+	//Change stack pointer and base pointer
+	np->tf->ebp = nbp;
+	np->tf->esp = nsp;
+
+	//Copy parent's stack into new thread's stack location
+	spb = curproc->tf->esp & 0xF000;
+	memmove(stack, (void*)spb, 0x1000);
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
-      np->ofile[i] = curproc->ofile[i];
+      np->ofile[i] = filedup(curproc->ofile[i]);
   np->cwd = idup(curproc->cwd);
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
@@ -596,10 +603,6 @@ clone(void *stack){
   release(&ptable.lock);
 
   return pid;
-  // int size;
-  // if(argint(1, &size) < 0)
-  //   retrun -1;
-
 }
 
 //Wait for a thread to exit and return its pid
@@ -650,7 +653,7 @@ join(void)
 int 
 lock(int *l)
 {
-  acquire(&slock)
+  acquire(&slock);
   if(*l == 0){
     *l = 1;
      release(&slock);
@@ -658,7 +661,7 @@ lock(int *l)
   }
 
   while (*l == 1)
-    sleep(1, &slock);
+    sleep(l, &slock);
   *l = 1;
   release(&slock);
 
@@ -669,14 +672,14 @@ lock(int *l)
 int 
 unlock(int *l)
 {
-  acquire(&slock)
+  acquire(&slock);
   if(*l == 0){
      release(&slock);
      return -1;
   }
 
   *l = 0;
-  wakeup(1);
+  wakeup(l);
   release(&slock);
 
   return 0;
