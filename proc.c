@@ -580,21 +580,33 @@ clone(void *stack){
 
   np->parent->threads++;
 
-  uint nbp, nsp, spb;
-//Calculate bp and stack pointer for calculating bp and sp
-	nbp = curproc->tf->ebp & 0x0FFF;
-	nbp = nbp | (uint)stack;
+  uint newsp, newbp, spb;
+//Calculate newbp and newsp for updating ebp and esp
+
+  // cprintf("proc->tf->ebp = %d\n", curproc->tf->ebp);
+	// cprintf("proc->tf->esp = %d\n", curproc->tf->esp);
+  // cprintf("0x0FFF = %d\n", 0x0FFF);
+  // cprintf("stack = %d\n", stack);
 	
-	nsp = curproc->tf->esp & 0x0FFF;
-	nsp = nsp | (uint)stack;
+	newsp = (curproc->tf->esp & 0x0FFF) | (uint)stack;
+  // cprintf("nsp = %d\n", nsp);
 
-	//Change stack pointer and base pointer
-	np->tf->ebp = nbp;
-	np->tf->esp = nsp;
+  newbp = (curproc->tf->ebp & 0x0FFF) | (uint)stack;
+  // cprintf("nbp = %d\n", nbp);
 
-	//Copy parent's stack into new thread's stack location
+	//Update esp and ebp
+	np->tf->esp = newsp;
+  np->tf->ebp = newbp;
+
+  // cprintf("proc->tf->ebp = %d\n", curproc->tf->ebp);
+	// cprintf("proc->tf->esp = %d\n", curproc->tf->esp);
+
+	//Update new stack by copying parent's stack
 	spb = curproc->tf->esp & 0xF000;
+  // cprintf("spb = %d\n", spb);
 	memmove(stack, (void*)spb, 0x1000);
+  // cprintf("stack = %d\n", stack);
+  // cprintf("spb = %d\n", spb);
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
