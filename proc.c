@@ -91,6 +91,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->threads = 0;
 
   release(&ptable.lock);
 
@@ -163,17 +164,28 @@ growproc(int n)
 {
   uint sz;
   struct proc *curproc = myproc();
+  struct proc *p;
 
+  acquire(&ptable.lock);
   sz = curproc->sz;
   if(n > 0){
-    if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
+    if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0){
+      release(&ptable.lock);
       return -1;
+    }
   } else if(n < 0){
-    if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
+    if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0){
+      release(&ptable.lock);
       return -1;
+    }
   }
   curproc->sz = sz;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pgdir == curproc->pgdir)
+      p->sz = sz;
+  }
   switchuvm(curproc);
+  release(&ptable.lock);
   return 0;
 }
 
