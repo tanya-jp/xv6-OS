@@ -9,23 +9,24 @@ thread_create(void (*fn) (void *), void *arg)
 {
   void* stack = malloc(PGSIZE * 2);
   
+  //check stack and update
   if((uint)stack % PGSIZE)
-    stack = stack + (4096 - (uint)stack % PGSIZE);
+    stack += (PGSIZE - (uint)stack % PGSIZE);
 
-  int threadId = clone(stack);
+  int tid = clone(stack);
 
-  if (threadId == -1)
+  if (tid == -1)
     return -1;
 
-  if (threadId == 0) //Child Code
+  if (tid != 0) //Parent
+  {
+    return tid;
+  }
+  else //Child
   {
     fn(arg);
-	free(stack);
+	  free(stack);
     exit();
-  }
-  else //Parent Code
-  {
-    return threadId;
   }
 
   return -1;

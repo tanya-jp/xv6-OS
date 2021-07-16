@@ -97,17 +97,22 @@ sys_printhelloworld(void)
   return 0;
 }
 
+//call clone and return thread id
+//return -1 if an error occurs
 int
 sys_clone(void)
 {
   char * stack;
 	
+  //check if the integer as a user pointer is indeed in the user part of the address space
 	if(argptr(0, &stack, sizeof(char *)) < 0)
 		return -1;
 
 	return clone((void*)stack);
 }
 
+//call join and return thread id
+//return -1 if error occurs
 int
 sys_join(void)
 {

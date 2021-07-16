@@ -649,7 +649,9 @@ join(void)
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
+        //decrease number of threads 
         curproc->threads--;
+        //free a page table and all the physical memory pages in its user parts
         if(curproc <= 0)
           freevm(p->pgdir);
         p->pid = 0;
