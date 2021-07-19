@@ -27,7 +27,7 @@ void printhelloworld(void);
 int clone(void*);
 int join(void);
 int lock(int*);
-int unlocl(int*);
+int unlock(int*);
 
 // ulib.c
 int stat(const char*, struct stat*);
