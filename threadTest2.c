@@ -1,48 +1,28 @@
-/* memory leaks from thread library? */
+// this is a test for thread functions
 #include "types.h"
+#include "stat.h"
 #include "user.h"
+// #include "thread.h"
 
-#undef NULL
-#define NULL ((void*)0)
+int arrsum = 0;
+int arr[] = {1, 2, 3, 4, 5, 6}; // 1 + 2 + 3 + 4 + 5 + 6 = 21
 
-#define PGSIZE (4096)
-
-int ppid;
-volatile int global;
-
-#define assert(x) if (x) {} else { \
-   printf(1, "%s: %d ", __FILE__, __LINE__); \
-   printf(1, "assert failed (%s)\n", # x); \
-   printf(1, "TEST FAILED\n"); \
-   kill(ppid); \
-   exit(); \
+void sum(void *x){
+    arrsum += *((int *)x);
 }
 
-void worker(void *arg_ptr);
+int main(){
+   int join_pid;
+    for(int i = 0; i < 6; i++){
+        join_pid = thread_create(sum, &arr[i]);
+        printf(1, "thread %d joined : %d\n",i ,  join_pid);
+    }
+    for(int i = 0; i < 6; i++){
+        join();
+    }
+    printf(1,"*%d\n", arrsum);
 
-int
-main(int argc, char *argv[])
-{
-   ppid = getpid();
-
-   int i, thread_pid, join_pid;
-   for(i = 0; i < 2000; i++) {
-      global = 1;
-      thread_pid = thread_create(worker, 0);
-      assert(thread_pid > 0);
-      join_pid = join();
-      assert(join_pid == thread_pid);
-      assert(global == 5);
-      assert((uint)sbrk(0) < (150 * 4096) && "shouldn't even come close");
-   }
-
-   printf(1, "TEST PASSED\n");
-   exit();
-}
-
-void
-worker(void *arg_ptr) {
-   assert(global == 1);
-   global+=4;
-   exit();
+    printf(1, "TEST PASSED\n");
+     
+    exit(); 
 }
